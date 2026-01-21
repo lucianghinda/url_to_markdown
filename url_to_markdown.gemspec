@@ -7,10 +7,14 @@ Gem::Specification.new do |spec|
   spec.email = ["lucian@shortruby.com"]
 
   spec.summary = "Convert URLs to Markdown via Cloudflare Browser Rendering"
+  spec.homepage = "https://github.com/lucianghinda/url_to_markdown"
   spec.metadata["rubygems_mfa_required"] = "true"
+  spec.metadata["homepage_uri"] = spec.homepage
+  spec.metadata["source_code_uri"] = spec.homepage
   spec.required_ruby_version = ">= 3.4.4"
   spec.files = Dir["lib/**/*", "README.md"]
   spec.require_paths = ["lib"]
+  spec.license = "Apache-2.0"
 
   spec.add_dependency "faraday", "~> 2.0"
   spec.add_dependency "pstore", "~> 0.1"
