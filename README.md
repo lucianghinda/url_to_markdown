@@ -204,6 +204,9 @@ export CLOUDFLARE_API_TOKEN="your-token"
 export CLOUDFLARE_ACCOUNT_ID="your-account-id"
 ```
 
+Check the Cloudflare Developers documentation about [finding account and zone id](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/#copy-your-account-id) to get your account it. 
+Generate an API TOKEN by following [the documentation about Browser Rendering](https://developers.cloudflare.com/browser-rendering/rest-api/#before-you-begin) where you will also find the permission needed for the token. 
+
 ### Tests
 
 ```bash
