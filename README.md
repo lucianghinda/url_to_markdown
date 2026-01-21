@@ -16,6 +16,14 @@ Cloudflare Browser Rendering is the default processor, but you can plug in your 
 
 ## Installation
 
+Add the gem to your Gemfile:
+
+```ruby
+gem 'url_to_markdown'
+```
+
+Then install:
+
 ```bash
 bundle install
 ```
@@ -200,12 +208,6 @@ export CLOUDFLARE_ACCOUNT_ID="your-account-id"
 
 ```bash
 bundle exec rake test
-```
-
-### Sorbet
-
-```bash
-bundle exec srb tc
 ```
 
 ### RuboCop
