@@ -185,7 +185,16 @@ result.on_error do |error|
 end
 ```
 
-## Development
+## Contributing
+
+### Environment Variables
+
+Set the Cloudflare credentials before running integration or manual checks:
+
+```bash
+export CLOUDFLARE_API_TOKEN="your-token"
+export CLOUDFLARE_ACCOUNT_ID="your-account-id"
+```
 
 ### Tests
 
