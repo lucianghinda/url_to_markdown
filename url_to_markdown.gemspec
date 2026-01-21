@@ -4,11 +4,11 @@ Gem::Specification.new do |spec|
   spec.name = "url_to_markdown"
   spec.version = "0.1.0"
   spec.authors = ["Lucian Ghinda"]
-  spec.email = ["lucian@example.com"]
+  spec.email = ["lucian@shortruby.com"]
 
   spec.summary = "Convert URLs to Markdown via Cloudflare Browser Rendering"
   spec.metadata["rubygems_mfa_required"] = "true"
-  spec.required_ruby_version = ">= 3.0.0"
+  spec.required_ruby_version = ">= 3.4.4"
   spec.files = Dir["lib/**/*", "README.md"]
   spec.require_paths = ["lib"]
 
@@ -16,5 +16,4 @@ Gem::Specification.new do |spec|
   spec.add_dependency "pstore", "~> 0.1"
   spec.add_dependency "simple-result", "~> 0.3"
   spec.add_dependency "zeitwerk", "~> 2.6"
-
 end
