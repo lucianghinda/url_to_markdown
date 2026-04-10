@@ -5,7 +5,7 @@ require "logger"
 class UrlToMarkdown
   class Configuration
     attr_accessor :cloudflare_api_token, :cloudflare_account_id, :cloudflare_timeout_ms, :cloudflare_cache_ttl,
-                  :logger, :default_processor, :default_actions
+                  :logger, :default_processor, :default_scripts
 
     def initialize
       @cloudflare_api_token = ENV.fetch("CLOUDFLARE_API_TOKEN", nil)
@@ -14,7 +14,7 @@ class UrlToMarkdown
       @cloudflare_cache_ttl = 5
       @logger = Logger.new($stdout)
       @default_processor = UrlToMarkdown::Cloudflare::Processor
-      @default_actions = nil
+      @default_scripts = nil
     end
 
     def cloudflare_api_token!

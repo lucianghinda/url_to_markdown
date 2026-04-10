@@ -18,20 +18,21 @@ class UrlToMarkdown
       end
 
       def markdown(url: nil, html: nil, wait_for_selector: nil, wait_for_timeout_in_milliseconds: nil, cache_ttl: nil,
-                   actions: nil)
+                   scripts: nil, set_extra_http_headers: nil)
         validate_payload!(url: url, html: html)
 
         response = connection.post("accounts/#{@account_id}/browser-rendering/markdown") do |request|
           request.headers["Authorization"] = "Bearer #{@token}"
           request.headers["Content-Type"] = "application/json"
           request.options.timeout = @timeout
+          request.params["cacheTTL"] = cache_ttl if cache_ttl
           request.body = JSON.generate(build_payload(
                                          url: url,
                                          html: html,
                                          wait_for_selector: wait_for_selector,
                                          wait_for_timeout_in_milliseconds: wait_for_timeout_in_milliseconds,
-                                         cache_ttl: cache_ttl,
-                                         actions: actions
+                                         scripts: scripts,
+                                         set_extra_http_headers: set_extra_http_headers
                                        ))
         end
 
@@ -43,6 +44,16 @@ class UrlToMarkdown
       rescue Faraday::Error => e
         UrlToMarkdown::Result.failure(UrlToMarkdown::NetworkError.new(e))
       end
+
+      SECURITY_CHECKPOINT_PATTERNS = [
+        "vercel.link/security-checkpoint",  # Vercel Firewall
+        "Vercel Security Checkpoint",
+        "Just a moment",                    # Cloudflare challenge
+        "Checking your browser",            # Cloudflare challenge
+        "Enable JavaScript and cookies",    # Cloudflare challenge
+        "cf-browser-verification",          # Cloudflare legacy
+        "DDoS protection by"                # Generic DDoS protection
+      ].freeze
 
       private
 
@@ -58,18 +69,21 @@ class UrlToMarkdown
         raise UrlToMarkdown::ValidationError.new(nil, "Provide a URL or HTML")
       end
 
-      def build_payload(url:, html:, wait_for_selector:, wait_for_timeout_in_milliseconds:, cache_ttl:, actions: nil)
+      def build_payload(url:, html:, wait_for_selector:, wait_for_timeout_in_milliseconds:, scripts:, set_extra_http_headers:)
         payload = {}
         payload[:url] = url if url
         payload[:html] = html if html
-        payload[:wait_for_selector] = wait_for_selector if wait_for_selector
-        if wait_for_timeout_in_milliseconds
-          payload[:wait_for_timeout_in_milliseconds] =
-            wait_for_timeout_in_milliseconds
-        end
-        payload[:cache_ttl] = cache_ttl if cache_ttl
-        payload[:actions] = actions if actions&.any?
+        payload[:waitForSelector] = { selector: wait_for_selector } if wait_for_selector
+        payload[:waitForTimeout] = wait_for_timeout_in_milliseconds if wait_for_timeout_in_milliseconds
+        payload[:addScriptTag] = Array(scripts).map { { content: it } } if scripts&.any?
+        payload[:setExtraHTTPHeaders] = set_extra_http_headers if set_extra_http_headers
         payload
+      end
+
+      def security_checkpoint?(content)
+        return false unless content.is_a?(String)
+
+        SECURITY_CHECKPOINT_PATTERNS.any? { |pattern| content.include?(pattern) }
       end
 
       def connection
@@ -84,7 +98,12 @@ class UrlToMarkdown
         when 200..299
           data = JSON.parse(body)
           if data.key?("result")
-            UrlToMarkdown::Result.success(data["result"])
+            content = data["result"]
+            if security_checkpoint?(content)
+              UrlToMarkdown::Result.failure(UrlToMarkdown::SecurityCheckpointError.new(nil, "Blocked by security checkpoint"))
+            else
+              UrlToMarkdown::Result.success(content)
+            end
           else
             UrlToMarkdown::Result.failure(UrlToMarkdown::MissingResultKeyInResponse.new(status, body))
           end

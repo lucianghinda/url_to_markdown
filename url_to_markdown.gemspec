@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = "url_to_markdown"
-  spec.version = "0.2.1"
+  spec.version = "0.2.2"
   spec.authors = ["Lucian Ghinda"]
   spec.email = ["lucian@shortruby.com"]
 

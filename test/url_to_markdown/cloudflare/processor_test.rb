@@ -18,7 +18,7 @@ class UrlToMarkdownCloudflareProcessorTest < Minitest::Test
   def test_delegates_to_client
     processor = UrlToMarkdown::Cloudflare::Processor.new(config: @config)
     client = processor.instance_variable_get(:@client)
-    client.expects(:markdown).with(url: "https://example.com", actions: nil).returns(UrlToMarkdown::Result.success("ok"))
+    client.expects(:markdown).with(url: "https://example.com", scripts: nil).returns(UrlToMarkdown::Result.success("ok"))
 
     result = processor.convert("https://example.com")
 
@@ -26,13 +26,13 @@ class UrlToMarkdownCloudflareProcessorTest < Minitest::Test
     assert_equal "ok", result.payload
   end
 
-  def test_delegates_actions_to_client
+  def test_delegates_scripts_to_client
     processor = UrlToMarkdown::Cloudflare::Processor.new(config: @config)
     client = processor.instance_variable_get(:@client)
-    actions = [ { type: "evaluate", code: "document.querySelector('nav').remove()" } ]
-    client.expects(:markdown).with(url: "https://example.com", actions: actions).returns(UrlToMarkdown::Result.success("ok"))
+    scripts = ["document.querySelectorAll('nav').forEach(el => el.remove())"]
+    client.expects(:markdown).with(url: "https://example.com", scripts: scripts).returns(UrlToMarkdown::Result.success("ok"))
 
-    result = processor.convert("https://example.com", actions: actions)
+    result = processor.convert("https://example.com", scripts: scripts)
 
     assert result.success?
   end

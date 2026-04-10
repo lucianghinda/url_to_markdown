@@ -63,7 +63,7 @@ class UrlToMarkdownCloudflareClientTest < Minitest::Test
   end
 
   def test_includes_wait_for_selector_in_request_body
-    expected_body = JSON.generate({ url: "https://example.com", wait_for_selector: ".content" })
+    expected_body = JSON.generate({ url: "https://example.com", waitForSelector: { selector: ".content" } })
 
     stub_cloudflare(status: 200, body: read_response("success"), expected_body: expected_body)
 
@@ -72,30 +72,66 @@ class UrlToMarkdownCloudflareClientTest < Minitest::Test
     assert_requested(:post, endpoint_url, body: expected_body)
   end
 
-  def test_raises_validation_error_when_no_url_or_html
-    assert_raises(UrlToMarkdown::ValidationError) { @client.markdown }
-  end
-
-  def test_includes_actions_in_request_body
-    actions = [ { type: "evaluate", code: "document.querySelector('nav').remove()" } ]
-    expected_body = JSON.generate({ url: "https://example.com", actions: actions })
+  def test_includes_wait_for_timeout_in_request_body
+    expected_body = JSON.generate({ url: "https://example.com", waitForTimeout: 2000 })
 
     stub_cloudflare(status: 200, body: read_response("success"), expected_body: expected_body)
 
-    @client.markdown(url: "https://example.com", actions: actions)
+    @client.markdown(url: "https://example.com", wait_for_timeout_in_milliseconds: 2000)
 
     assert_requested(:post, endpoint_url, body: expected_body)
   end
 
-  def test_omits_actions_when_nil
+  def test_sends_cache_ttl_as_query_param
+    stub_request(:post, "#{endpoint_url}?cacheTTL=60")
+      .with(headers: auth_headers)
+      .to_return(status: 200, body: read_response("success"))
+
+    @client.markdown(url: "https://example.com", cache_ttl: 60)
+
+    assert_requested(:post, "#{endpoint_url}?cacheTTL=60")
+  end
+
+  def test_includes_scripts_as_add_script_tag
+    scripts = [
+      "document.querySelectorAll('nav').forEach(el => el.remove())",
+      "document.querySelectorAll('footer').forEach(el => el.remove())"
+    ]
+    expected_body = JSON.generate({
+                                    url: "https://example.com",
+      addScriptTag: scripts.map { { content: it } }
+                                  })
+
+    stub_cloudflare(status: 200, body: read_response("success"), expected_body: expected_body)
+
+    @client.markdown(url: "https://example.com", scripts: scripts)
+
+    assert_requested(:post, endpoint_url, body: expected_body)
+  end
+
+  def test_omits_add_script_tag_when_scripts_nil
     stub_cloudflare(status: 200, body: read_response("success"))
 
-    @client.markdown(url: "https://example.com", actions: nil)
+    @client.markdown(url: "https://example.com", scripts: nil)
 
     assert_requested(:post, endpoint_url) do |request|
-      body = JSON.parse(request.body)
-      !body.key?("actions")
+      !JSON.parse(request.body).key?("addScriptTag")
     end
+  end
+
+  def test_includes_set_extra_http_headers_in_request_body
+    headers = { "x-vercel-protection-bypass" => "secret", "x-custom" => "value" }
+    expected_body = JSON.generate({ url: "https://example.com", setExtraHTTPHeaders: headers })
+
+    stub_cloudflare(status: 200, body: read_response("success"), expected_body: expected_body)
+
+    @client.markdown(url: "https://example.com", set_extra_http_headers: headers)
+
+    assert_requested(:post, endpoint_url, body: expected_body)
+  end
+
+  def test_raises_validation_error_when_no_url_or_html
+    assert_raises(UrlToMarkdown::ValidationError) { @client.markdown }
   end
 
   private
