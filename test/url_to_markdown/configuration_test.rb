@@ -38,4 +38,10 @@ class UrlToMarkdownConfigurationTest < Minitest::Test
 
     assert_raises(UrlToMarkdown::MissingCredentialsError) { config.cloudflare_account_id! }
   end
+
+  def test_default_actions_defaults_to_nil
+    config = UrlToMarkdown::Configuration.new
+
+    assert_nil config.default_actions
+  end
 end

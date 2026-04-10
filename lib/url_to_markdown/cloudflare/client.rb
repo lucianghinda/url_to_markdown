@@ -17,7 +17,8 @@ class UrlToMarkdown
         validate_credentials!
       end
 
-      def markdown(url: nil, html: nil, wait_for_selector: nil, wait_for_timeout_in_milliseconds: nil, cache_ttl: nil)
+      def markdown(url: nil, html: nil, wait_for_selector: nil, wait_for_timeout_in_milliseconds: nil, cache_ttl: nil,
+                   actions: nil)
         validate_payload!(url: url, html: html)
 
         response = connection.post("accounts/#{@account_id}/browser-rendering/markdown") do |request|
@@ -29,7 +30,8 @@ class UrlToMarkdown
                                          html: html,
                                          wait_for_selector: wait_for_selector,
                                          wait_for_timeout_in_milliseconds: wait_for_timeout_in_milliseconds,
-                                         cache_ttl: cache_ttl
+                                         cache_ttl: cache_ttl,
+                                         actions: actions
                                        ))
         end
 
@@ -56,7 +58,7 @@ class UrlToMarkdown
         raise UrlToMarkdown::ValidationError.new(nil, "Provide a URL or HTML")
       end
 
-      def build_payload(url:, html:, wait_for_selector:, wait_for_timeout_in_milliseconds:, cache_ttl:)
+      def build_payload(url:, html:, wait_for_selector:, wait_for_timeout_in_milliseconds:, cache_ttl:, actions: nil)
         payload = {}
         payload[:url] = url if url
         payload[:html] = html if html
@@ -66,6 +68,7 @@ class UrlToMarkdown
             wait_for_timeout_in_milliseconds
         end
         payload[:cache_ttl] = cache_ttl if cache_ttl
+        payload[:actions] = actions if actions&.any?
         payload
       end
 
