@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.2] - 2026-04-10
+
+### Fixed
+
+- `Cloudflare::Client` now returns `Result.failure` with `SecurityCheckpointError` when the rendered content is a security checkpoint page (Vercel Firewall, Cloudflare challenge, etc.) instead of falsely returning `Result.success` with the checkpoint HTML as content
+
+### Added
+
+- `UrlToMarkdown::SecurityCheckpointError` — new error class (subclass of `Error`) raised when a security checkpoint is detected in the rendered output
+
 ## [0.2.0] - 2026-04-10
 
 ### Added

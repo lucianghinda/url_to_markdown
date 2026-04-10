@@ -31,7 +31,7 @@ class UrlToMarkdownTest < Minitest::Test
     cache_store.expects(:store!).with("https://example.com", "markdown")
 
     processor_class = Class.new(UrlToMarkdown::Processor) do
-      def convert(_url, actions: nil)
+      def convert(_url, scripts: nil)
         UrlToMarkdown::Result.success("markdown")
       end
     end
@@ -78,7 +78,7 @@ class UrlToMarkdownTest < Minitest::Test
       end
       self.calls = 0
 
-      def convert(_url, actions: nil)
+      def convert(_url, scripts: nil)
         self.class.calls += 1
         UrlToMarkdown::Result.success("markdown")
       end
@@ -110,7 +110,7 @@ class UrlToMarkdownTest < Minitest::Test
     cache_store.expects(:store!).never
 
     processor_class = Class.new(UrlToMarkdown::Processor) do
-      def convert(_url, actions: nil)
+      def convert(_url, scripts: nil)
         UrlToMarkdown::Result.failure(UrlToMarkdown::ApiError.new(500, "boom"))
       end
     end
@@ -131,7 +131,7 @@ class UrlToMarkdownTest < Minitest::Test
     logger.expects(:info).with("UrlToMarkdown: completed https://example.com")
 
     processor_class = Class.new(UrlToMarkdown::Processor) do
-      def convert(_url, actions: nil)
+      def convert(_url, scripts: nil)
         UrlToMarkdown::Result.success("ok")
       end
     end
@@ -150,7 +150,7 @@ class UrlToMarkdownTest < Minitest::Test
     logger.expects(:info)
 
     processor_class = Class.new(UrlToMarkdown::Processor) do
-      def convert(_url, actions: nil)
+      def convert(_url, scripts: nil)
         raise "Boom"
       end
     end
@@ -165,16 +165,16 @@ class UrlToMarkdownTest < Minitest::Test
     assert_instance_of UrlToMarkdown::Error, result.error
   end
 
-  def test_convert_passes_actions_to_processor
+  def test_convert_passes_scripts_to_processor
     logger = mock("logger")
     logger.expects(:info).twice
 
-    actions = [ { type: "evaluate", code: "document.querySelector('nav').remove()" } ]
-    received_actions = nil
+    scripts = ["document.querySelector('nav').remove()"]
+    received_scripts = nil
 
     processor_class = Class.new(UrlToMarkdown::Processor) do
-      define_method(:convert) do |_url, actions: nil|
-        received_actions = actions
+      define_method(:convert) do |_url, scripts: nil|
+        received_scripts = scripts
         UrlToMarkdown::Result.success("ok")
       end
     end
@@ -183,27 +183,27 @@ class UrlToMarkdownTest < Minitest::Test
       url: "https://example.com",
       processor: processor_class,
       logger: logger,
-      actions: actions
+      scripts: scripts
     ).convert
 
-    assert_equal actions, received_actions
+    assert_equal scripts, received_scripts
   end
 
-  def test_convert_uses_default_actions_from_config
+  def test_convert_uses_default_scripts_from_config
     logger = mock("logger")
     logger.expects(:info).twice
 
-    actions = [ { type: "evaluate", code: "document.querySelector('footer').remove()" } ]
-    received_actions = nil
+    scripts = ["document.querySelector('footer').remove()"]
+    received_scripts = nil
 
     processor_class = Class.new(UrlToMarkdown::Processor) do
-      define_method(:convert) do |_url, actions: nil|
-        received_actions = actions
+      define_method(:convert) do |_url, scripts: nil|
+        received_scripts = scripts
         UrlToMarkdown::Result.success("ok")
       end
     end
 
-    UrlToMarkdown.configure { |c| c.default_actions = actions }
+    UrlToMarkdown.configure { |c| c.default_scripts = scripts }
 
     UrlToMarkdown.new(
       url: "https://example.com",
@@ -211,37 +211,37 @@ class UrlToMarkdownTest < Minitest::Test
       logger: logger
     ).convert
 
-    assert_equal actions, received_actions
+    assert_equal scripts, received_scripts
   ensure
-    UrlToMarkdown.configure { |c| c.default_actions = nil }
+    UrlToMarkdown.configure { |c| c.default_scripts = nil }
   end
 
-  def test_convert_per_call_actions_override_config
+  def test_convert_per_call_scripts_override_config
     logger = mock("logger")
     logger.expects(:info).twice
 
-    config_actions = [ { type: "evaluate", code: "document.querySelector('footer').remove()" } ]
-    call_actions = [ { type: "evaluate", code: "document.querySelector('nav').remove()" } ]
-    received_actions = nil
+    config_scripts = ["document.querySelector('footer').remove()"]
+    call_scripts = ["document.querySelector('nav').remove()"]
+    received_scripts = nil
 
     processor_class = Class.new(UrlToMarkdown::Processor) do
-      define_method(:convert) do |_url, actions: nil|
-        received_actions = actions
+      define_method(:convert) do |_url, scripts: nil|
+        received_scripts = scripts
         UrlToMarkdown::Result.success("ok")
       end
     end
 
-    UrlToMarkdown.configure { |c| c.default_actions = config_actions }
+    UrlToMarkdown.configure { |c| c.default_scripts = config_scripts }
 
     UrlToMarkdown.new(
       url: "https://example.com",
       processor: processor_class,
       logger: logger,
-      actions: call_actions
+      scripts: call_scripts
     ).convert
 
-    assert_equal call_actions, received_actions
+    assert_equal call_scripts, received_scripts
   ensure
-    UrlToMarkdown.configure { |c| c.default_actions = nil }
+    UrlToMarkdown.configure { |c| c.default_scripts = nil }
   end
 end

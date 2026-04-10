@@ -42,6 +42,8 @@ class UrlToMarkdown
   class ServerError < ApiError; end
   class MissingResultKeyInResponse < ApiError; end
 
+  class SecurityCheckpointError < Error; end
+
   class ValidationError < Error; end
   class InvalidUrlError < ValidationError; end
 
