@@ -15,9 +15,9 @@ class UrlToMarkdown
         )
       end
 
-      def convert(url)
+      def convert(url, actions: nil)
         validate_url!(url)
-        @client.markdown(url: url)
+        @client.markdown(url: url, actions: actions)
       end
 
       private

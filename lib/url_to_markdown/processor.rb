@@ -7,7 +7,7 @@ class UrlToMarkdown
       @cache_store = cache_store
     end
 
-    def convert(_url)
+    def convert(_url, actions: nil)
       raise NotImplementedError, "Implement in subclass"
     end
   end

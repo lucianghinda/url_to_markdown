@@ -8,11 +8,12 @@ loader.inflector.inflect("errors" => "Error", "pstore" => "PStore")
 loader.setup
 
 class UrlToMarkdown
-  def initialize(url:, processor: nil, logger: nil, cache_store: nil)
+  def initialize(url:, processor: nil, logger: nil, cache_store: nil, actions: nil)
     @url = url
     @processor_class = processor || self.class.configuration.default_processor
     @logger = logger || self.class.configuration.logger
     @cache_store = cache_store
+    @actions = actions || self.class.configuration.default_actions
   end
 
   def convert
@@ -27,7 +28,7 @@ class UrlToMarkdown
     end
 
     processor = @processor_class.new(logger: @logger, cache_store: @cache_store)
-    result = processor.convert(@url)
+    result = processor.convert(@url, actions: @actions)
 
     @cache_store.store!(@url, result.payload) if @cache_store && result.respond_to?(:success?) && result.success?
 

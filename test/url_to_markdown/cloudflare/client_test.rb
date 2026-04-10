@@ -76,6 +76,28 @@ class UrlToMarkdownCloudflareClientTest < Minitest::Test
     assert_raises(UrlToMarkdown::ValidationError) { @client.markdown }
   end
 
+  def test_includes_actions_in_request_body
+    actions = [ { type: "evaluate", code: "document.querySelector('nav').remove()" } ]
+    expected_body = JSON.generate({ url: "https://example.com", actions: actions })
+
+    stub_cloudflare(status: 200, body: read_response("success"), expected_body: expected_body)
+
+    @client.markdown(url: "https://example.com", actions: actions)
+
+    assert_requested(:post, endpoint_url, body: expected_body)
+  end
+
+  def test_omits_actions_when_nil
+    stub_cloudflare(status: 200, body: read_response("success"))
+
+    @client.markdown(url: "https://example.com", actions: nil)
+
+    assert_requested(:post, endpoint_url) do |request|
+      body = JSON.parse(request.body)
+      !body.key?("actions")
+    end
+  end
+
   private
 
   def endpoint_url
